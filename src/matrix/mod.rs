@@ -1,5 +1,10 @@
-use std::marker::PhantomData;
+use core::fmt::{Debug, Display, Formatter, Result};
+use core::marker::PhantomData;
 
+/// A wrapper type for use with Matrix2d
+///
+/// Any type that implements PartialEq with MatrixBool will be able
+/// to be displayed by Matrix2d.
 pub struct MatrixBool(bool);
 impl PartialEq<MatrixBool> for bool {
     fn eq(&self, other: &MatrixBool) -> bool {
@@ -12,6 +17,7 @@ impl PartialEq<MatrixBool> for u8 {
     }
 }
 
+/// A generic unit struct that holds a reference to any 2-dimensional slice-like type
 pub struct Matrix2d<'a, T, Matrix, Row>(&'a Matrix, PhantomData<T>, PhantomData<Row>)
 where
     Matrix: AsRef<[Row]>,
@@ -43,26 +49,26 @@ where
     }
 }
 
-impl<'a, T, Matrix, Row> core::fmt::Debug for Matrix2d<'a, T, Matrix, Row>
+impl<'a, T, Matrix, Row> Debug for Matrix2d<'a, T, Matrix, Row>
 where
+    T: Debug,
     Matrix: AsRef<[Row]>,
-    Row: AsRef<[T]> + core::fmt::Debug,
-    T: core::fmt::Debug,
+    Row: AsRef<[T]> + Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         self.rows()
             .fold(&mut f.debug_list(), |b, e| b.entry(&e.as_ref()))
             .finish()
     }
 }
 
-impl<'a, T, Matrix, Row> core::fmt::Display for Matrix2d<'a, T, Matrix, Row>
+impl<'a, T, Matrix, Row> Display for Matrix2d<'a, T, Matrix, Row>
 where
+    T: PartialEq<MatrixBool>,
     Matrix: AsRef<[Row]>,
     Row: AsRef<[T]>,
-    T: std::cmp::PartialEq<MatrixBool>,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         let mut output = String::with_capacity(self.row_len() * self.col_len() + self.row_len());
         for row in self.rows() {
             row.as_ref()
